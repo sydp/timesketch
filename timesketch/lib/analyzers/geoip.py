@@ -219,6 +219,7 @@ class BaseGeoIpAnalyzer(interface.BaseAnalyzer):
         "source_ip",
         "dest_ip",
         "ip_address",
+        "ip_addresses",
         "client_ip",
         "address",
         "saddr",
@@ -272,18 +273,21 @@ class BaseGeoIpAnalyzer(interface.BaseAnalyzer):
 
         for event in events:
             for ip_address_field in self.IP_FIELDS:
-                ip_address = event.source.get(ip_address_field)
-                if ip_address is None:
+                ip_address_value = event.source.get(ip_address_field)
+                if ip_address_value is None:
                     continue
 
-                if isinstance(ip_address, str):
-                    ip_address = [ip_address]
+                ip_address_list = []
+                if isinstance(ip_address_value, str):
+                    for ip_address in ip_address_value.split(','):
+                        ip_address = ip_address.strip()
+                        ip_address_list.append(ip_address)
 
-                for ip_addr in ip_address:
-                    if not self._validate_ip(ip_addr):
+                for ip_address in ip_address_list:
+                    if not self._validate_ip(ip_address):
                         logger.debug(
                             f"Value {0} in {1} not valid.".format(
-                                ip_addr, ip_address_field
+                                ip_address, ip_address_field
                             )
                         )
                         continue
